@@ -24,7 +24,7 @@ def is_datetime(dtstring):
         return False
     
 # Configuration
-fpath = '/Users/cbode/Documents/WorkSync/UCNRS/DRI/ucac_dri.dat'
+fpath = '/Users/cbode/Documents/WorkSync/UCNRS/DRI/dup_test.dat'
 delim = ','
 
 # Determine how many rows of header
@@ -46,4 +46,8 @@ header_length = i
 
 # Import values into DataFrame sort and analyze
 df = pd.read_csv(fpath,sep=delim,header=None,skiprows=header_length,parse_dates=0)
-
+df['dup'] = df.duplicated()
+df.sort(columns=df.columns[0],inplace=True)
+row0 = df
+for row in df:
+    

@@ -52,9 +52,9 @@ def get_header_row_length(fpath,delim,verbose):
 def create_timeseries_dataframe(fpath,delim,date_as_index):
     header_length = get_header_row_length(fpath,delim,False)
     if(date_as_index == True):
-        df = pd.read_csv(fpath,sep=delim,header=None,prefix='c',skiprows=header_length,parse_dates=0, date_parser=pd.datetools.datetime,index_col=0)        
+        df = pd.read_csv(fpath,sep=delim,header=None,prefix='c',skiprows=header_length,parse_dates=[0],low_memory=False, index_col=0)        
     else:
-        df = pd.read_csv(fpath,sep=delim,header=None,prefix='c',skiprows=header_length,parse_dates=0, date_parser=pd.datetools.datetime,dtype={0:dt.datetime},low_memory=False)
+        df = pd.read_csv(fpath,sep=delim,header=None,prefix='c',skiprows=header_length,parse_dates=[0],low_memory=False)      
     return df
 
 def get_duplicate_timestamp_count(df):
@@ -87,24 +87,29 @@ def remove_duplicate_timestamps(df,allfields):
     dfclean = df.drop(df[df.dup == True].index)
     return dfclean
 
-def check_timeseries_gaps(df,interval):
+def create_timeseries_gap(df,interval):
     # interval should be in minutes, e.g. '10Min'
     # note: requires no duplicate timestamps
     dfclean = remove_duplicate_timestamps(df,True)
     dfclean.set_index('c0',inplace=True)    
     mindate = dfclean.index.min()        
     maxdate = dfclean.index.max()
+    print('Dates Min: ',mindate,', Max: ',maxdate)
     ti = pd.date_range(start=mindate,end=maxdate,freq=interval)
-    
+    dfgap = dfclean.reindex(ti)
+    print('DataFrame gap count: ',dfgap['c1'].isnull().sum())
+    return dfgap
+  
     
 ################################    
 # Main runs test cases
 
 # Configuration
 path = get_filepath()
-datfile = 'dup_test.dat'
+datfile = 'null_test.dat' #'dup_test.dat'
 fpath = path+datfile
 delim = ','
+interval = '10Min'
 df = create_timeseries_dataframe(fpath,delim,False)
 
 '''
@@ -132,3 +137,4 @@ print(dfclean)
 '''
 
 # Check Timeseries for gaps
+dfg = create_timeseries_gap(df,interval)
